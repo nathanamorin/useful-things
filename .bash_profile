@@ -1,10 +1,3 @@
-
-
-#############
-# SRC https://gist.github.com/hernamesbarbara/1937937
-#############
-
-
 #!/bin/bash
 export TERM=xterm-color
 export CLICOLOR=1
@@ -17,53 +10,59 @@ export HISTCONTROL=ignoredups
 export HISTFILESIZE=100000
 export HISTSIZE=5000
 
-# Readline, the line editing library that bash uses, does not know
-# that the terminal escape sequences do not take up space on the
-# screen. The redisplay code assumes, unless told otherwise, that
-# each character in the prompt is a `printable' character that
-# takes up one character position on the screen. 
 
-# You can use the bash prompt expansion facility (see the PROMPTING
-# section in the manual page) to tell readline that sequences of
-# characters in the prompt strings take up no screen space. 
+# get current branch in git repo
+function parse_git_branch() {
+  BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
+  if [ ! "${BRANCH}" == "" ]
+  then
+    STAT=`parse_git_dirty`
+    echo "[${BRANCH}${STAT}]"
+  else
+    echo ""
+  fi
+}
 
-# Use the \[ escape to begin a sequence of non-printing characters,
-# and the \] escape to signal the end of such a sequence.
-# Define some colors first:
-RED='\[\e[1;31m\]'
-BOLDYELLOW='\[\e[1;33m\]'
-GREEN='\[\e[0;32m\]'
-BLUE='\[\e[1;34m\]'
-DARKBROWN='\[\e[1;33m\]'
-DARKGRAY='\[\e[1;30m\]'
-CUSTOMCOLORMIX='\[\e[1;30m\]'
-DARKCUSTOMCOLORMIX='\[\e[1;32m\]'
-LIGHTBLUE="\[\033[1;36m\]"
-PURPLE='\[\e[1;35m\]' #git branch
-# EG: GREEN="\[\e[0;32m\]" 
-#PURPLE='\[\e[1;35m\]'
-#BLUE='\[\e[1;34m\]'
-NC='\[\e[0m\]' # No Color
-#PS1="\[\033[1;34;40m[\033[1;31;40m\u@\h:\w\033[1;34;40m]\033[1;37;40m $\033[0;37;0m\] "
-#PS1="${CUSTOMCOLORMIX}\\u@\h: \\W]\\$ ${NC}"
+# get current status of git repo
+function parse_git_dirty {
+  status=`git status 2>&1 | tee`
+  dirty=`echo -n "${status}" 2> /dev/null | grep "modified:" &> /dev/null; echo "$?"`
+  untracked=`echo -n "${status}" 2> /dev/null | grep "Untracked files" &> /dev/null; echo "$?"`
+  ahead=`echo -n "${status}" 2> /dev/null | grep "Your branch is ahead of" &> /dev/null; echo "$?"`
+  newfile=`echo -n "${status}" 2> /dev/null | grep "new file:" &> /dev/null; echo "$?"`
+  renamed=`echo -n "${status}" 2> /dev/null | grep "renamed:" &> /dev/null; echo "$?"`
+  deleted=`echo -n "${status}" 2> /dev/null | grep "deleted:" &> /dev/null; echo "$?"`
+  bits=''
+  if [ "${renamed}" == "0" ]; then
+    bits=">${bits}"
+  fi
+  if [ "${ahead}" == "0" ]; then
+    bits="*${bits}"
+  fi
+  if [ "${newfile}" == "0" ]; then
+    bits="+${bits}"
+  fi
+  if [ "${untracked}" == "0" ]; then
+    bits="?${bits}"
+  fi
+  if [ "${deleted}" == "0" ]; then
+    bits="x${bits}"
+  fi
+  if [ "${dirty}" == "0" ]; then
+    bits="!${bits}"
+  fi
+  if [ ! "${bits}" == "" ]; then
+    echo " ${bits}"
+  else
+    echo ""
+  fi
+}
 
-# PS1 (shell prompt)
-# set variable identifying the chroot you work in (used in the prompt below)
-#if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
-#    debian_chroot=$(cat /etc/debian_chroot)
-#fi
+export PS1="\[\e[34m\]\u\[\e[m\] \[\e[33m\][\[\e[m\]\[\e[33;40m\]\w\[\e[m\]\[\e[33m\]]\[\e[m\]\[\e[37;40m\]\`parse_git_branch\`\[\e[m\] \[\e[32m\]\\$\[\e[m\] "
 
-#PS1="${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\$(parse_git_branch)\[\033[00m\]\$"
-
-PS1="${LIGHTBLUE}\\u ${BOLDYELLOW}[\\W] ${PURPLE}\$(parse_git_branch)${DARKCUSTOMCOLORMIX}$ ${NC}"
-#PS1="${DARKCUSTOMCOLORMIX}\\u@\h:\\W]${PURPLE}\$(parse_git_branch)${DARKCUSTOMCOLORMIX}$ ${NC}"
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm" # Load RVM function
-
-
-
-###############################
-##         Aliases           ##
-###############################
+#############
+# SRC https://gist.github.com/hernamesbarbara/1937937
+#############
 
 ###################
 ###### osx ########
