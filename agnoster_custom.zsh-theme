@@ -26,7 +26,6 @@
 
 typeset -aHg AGNOSTER_PROMPT_SEGMENTS=(
     prompt_status
-    prompt_context
     prompt_dir
     prompt_git
     prompt_end
@@ -78,15 +77,6 @@ prompt_end() {
 
 ### Prompt components
 # Each component will draw itself, and hide itself if no information needs to be shown
-
-# Context: user@hostname (who am I and where am I)
-prompt_context() {
-  local user=`whoami`
-
-  if [[ "$user" != "$DEFAULT_USER" || -n "$SSH_CONNECTION" ]]; then
-    prompt_segment $PRIMARY_FG default " %(!.%{%F{yellow}%}.)$user@%m "
-  fi
-}
 
 # Git: branch/detached head, dirty status
 prompt_git() {
